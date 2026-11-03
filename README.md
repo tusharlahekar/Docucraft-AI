@@ -1,6 +1,6 @@
 # DocuCraft AI — Enterprise Multi-Agent Document Generation & Format-Preserving Editing Platform
 
-> **100% Free & Open Source | Zero Paid APIs | Zero Subscriptions | Complete Local Execution**
+> ** Complete Local Execution**
 
 An enterprise-grade, multi-agent AI document assistant and generation platform built with **Python, FastAPI, React, LangGraph, ChromaDB, and PostgreSQL/SQLite**. The platform enables multi-turn AI conversations, deep document structure parsing, semantic RAG search, live web research, new office document generation, and **format-preserving targeted document editing** across Word (`.docx`), PowerPoint (`.pptx`), Excel (`.xlsx`), and PDF (`.pdf`) formats.
 
