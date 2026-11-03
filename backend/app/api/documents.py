@@ -198,10 +198,18 @@ def download_document(
     if not d or not os.path.exists(d.storage_path):
         raise HTTPException(status_code=404, detail="Document file not found on disk.")
 
+    media_types = {
+        "pdf": "application/pdf",
+        "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    }
+    media_type = media_types.get(d.file_type.lower(), "application/octet-stream")
+
     return FileResponse(
         path=d.storage_path,
         filename=d.filename,
-        media_type="application/octet-stream"
+        media_type=media_type
     )
 
 @router.delete("/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
