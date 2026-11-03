@@ -1,11 +1,12 @@
 @echo off
+cd /d "%~dp0"
 echo ========================================================
 echo Launching Enterprise AI Chatbot & Document Generation Platform
 echo 100%% Free & Open Source (Zero Paid APIs)
 echo ========================================================
-start "DocuAI Backend (FastAPI)" cmd /k "python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload"
+start "DocuAI Backend (FastAPI)" cmd /k "cd /d "%~dp0" && python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload"
 timeout /t 3 /nobreak >nul
-start "DocuAI Frontend (React + Vite)" cmd /k "cd frontend && npm run dev"
+start "DocuAI Frontend (React + Vite)" cmd /k "cd /d "%~dp0\frontend" && npm run dev"
 timeout /t 3 /nobreak >nul
 start http://localhost:5173
 echo.

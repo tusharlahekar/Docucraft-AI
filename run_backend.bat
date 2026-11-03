@@ -1,4 +1,5 @@
 @echo off
+cd /d "%~dp0"
 echo ========================================================
 echo Starting Enterprise DocuAI Assistant Backend (FastAPI)...
 echo ========================================================

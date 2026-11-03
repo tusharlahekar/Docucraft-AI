@@ -4,7 +4,7 @@ from typing import Generator
 from urllib.parse import urlparse
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
-from backend.app.core.config import settings
+from backend.app.core.config import settings, BASE_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -25,16 +25,13 @@ def is_database_reachable(url: str) -> bool:
     except (socket.timeout, ConnectionRefusedError, OSError):
         return False
 
-# Convert asyncpg scheme to psycopg2 for synchronous engine if present
 clean_postgres_url = settings.DATABASE_URL.replace("+asyncpg", "")
-clean_sqlite_url = settings.SQLITE_FALLBACK_URL.replace("+aiosqlite", "")
+clean_sqlite_url = f"sqlite:///{BASE_DIR / 'platform.db'}"
 
-if is_database_reachable(clean_postgres_url):
-    logger.info("PostgreSQL host is reachable. Using PostgreSQL engine.")
+if is_database_reachable(clean_postgres_url) and "postgres" in clean_postgres_url:
     target_url = clean_postgres_url
     connect_args = {}
 else:
-    logger.info("PostgreSQL not active locally. Utilizing instant SQLite engine fallback.")
     target_url = clean_sqlite_url
     connect_args = {"check_same_thread": False}
 
@@ -52,10 +49,28 @@ SessionLocal = sessionmaker(
 )
 
 def init_db():
-    """Initializes all table schemas on startup."""
-    import backend.app.models.entities  # Ensure models are registered on Base.metadata
-    Base.metadata.create_all(bind=active_engine)
-    logger.info(f"Database schemas verified successfully using {active_engine.url.drivername}.")
+    """Initializes all table schemas on startup with automatic fallback if PostgreSQL errors."""
+    global active_engine, SessionLocal
+    import backend.app.models.entities
+    try:
+        Base.metadata.create_all(bind=active_engine)
+        logger.info(f"Database schemas verified successfully using {active_engine.url.drivername}.")
+    except Exception as exc:
+        logger.warning(f"Primary database connection failed ({exc}). Switching to SQLite fallback engine...")
+        fallback_url = clean_sqlite_url
+        active_engine = create_engine(
+            fallback_url,
+            echo=False,
+            future=True,
+            connect_args={"check_same_thread": False}
+        )
+        SessionLocal = sessionmaker(
+            autocommit=False,
+            autoflush=False,
+            bind=active_engine
+        )
+        Base.metadata.create_all(bind=active_engine)
+        logger.info("Database schemas initialized successfully using SQLite fallback.")
 
 def get_db() -> Generator[Session, None, None]:
     """Dependency that yields a database session."""

@@ -1,7 +1,7 @@
 @echo off
+cd /d "%~dp0\frontend"
 echo ========================================================
 echo Starting DocuAI Platform Frontend (Vite + React)...
 echo ========================================================
-cd frontend
 npm run dev -- --host
 pause

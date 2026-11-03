@@ -31,7 +31,16 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
         onAuthSuccess(res.user, res.access_token);
       }
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Authentication failed. Please check your credentials.');
+      const detail = err.response?.data?.detail;
+      if (Array.isArray(detail)) {
+        setError(detail.map((d: any) => d.msg || JSON.stringify(d)).join(', '));
+      } else if (typeof detail === 'string') {
+        setError(detail);
+      } else if (err.message) {
+        setError(`Error: ${err.message}. Please verify the backend is running at http://localhost:8000.`);
+      } else {
+        setError('Authentication failed. Please check your credentials.');
+      }
     } finally {
       setLoading(false);
     }
