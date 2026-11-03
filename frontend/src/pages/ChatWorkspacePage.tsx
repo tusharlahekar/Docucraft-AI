@@ -44,14 +44,16 @@ export const ChatWorkspacePage: React.FC = () => {
   const loadConversations = async () => {
     try {
       const convs = await api.listConversations();
-      setConversations(convs);
-      if (convs.length > 0 && !activeConvId) {
-        selectConversation(convs[0].id);
-      } else if (convs.length === 0) {
+      const safeConvs = Array.isArray(convs) ? convs : [];
+      setConversations(safeConvs);
+      if (safeConvs.length > 0 && !activeConvId) {
+        selectConversation(safeConvs[0].id);
+      } else if (safeConvs.length === 0) {
         handleNewChat();
       }
     } catch (err) {
       console.error('Failed to load conversations:', err);
+      setConversations([]);
     }
   };
 
@@ -59,19 +61,22 @@ export const ChatWorkspacePage: React.FC = () => {
     setActiveConvId(id);
     try {
       const conv = await api.getConversation(id);
-      setMessages(conv.messages || []);
+      setMessages(Array.isArray(conv?.messages) ? conv.messages : []);
     } catch (err) {
       console.error('Failed to fetch conversation details:', err);
+      setMessages([]);
     }
   };
 
   const handleNewChat = async () => {
     try {
       const newConv = await api.createConversation('New Conversation');
-      setConversations([newConv, ...conversations]);
-      setActiveConvId(newConv.id);
-      setMessages([]);
-      setAttachedFiles([]);
+      if (newConv && newConv.id) {
+        setConversations((prev) => [newConv, ...(Array.isArray(prev) ? prev : [])]);
+        setActiveConvId(newConv.id);
+        setMessages([]);
+        setAttachedFiles([]);
+      }
     } catch (err) {
       console.error('Failed to create new conversation:', err);
     }
@@ -81,7 +86,7 @@ export const ChatWorkspacePage: React.FC = () => {
     e.stopPropagation();
     try {
       await api.deleteConversation(id);
-      const remaining = conversations.filter((c) => c.id !== id);
+      const remaining = (conversations || []).filter((c) => c.id !== id);
       setConversations(remaining);
       if (activeConvId === id) {
         if (remaining.length > 0) {
@@ -164,7 +169,7 @@ export const ChatWorkspacePage: React.FC = () => {
         </div>
 
         <div className="flex-1 overflow-y-auto p-3 space-y-1">
-          {conversations.map((c) => (
+          {(conversations || []).map((c) => (
             <div
               key={c.id}
               onClick={() => selectConversation(c.id)}
@@ -197,9 +202,9 @@ export const ChatWorkspacePage: React.FC = () => {
           <div className="flex items-center space-x-3 truncate">
             <Bot className="h-5 w-5 text-brand-700" />
             <h2 className="text-sm font-bold text-slate-800 truncate">
-              {conversations.find((c) => c.id === activeConvId)?.title || 'AI Document Assistant'}
+              {(conversations || []).find((c) => c.id === activeConvId)?.title || 'AI Document Assistant'}
             </h2>
-            {attachedFiles.length > 0 && (
+            {(attachedFiles || []).length > 0 && (
               <span className="text-xs bg-brand-50 text-brand-700 px-2 py-0.5 rounded-full font-medium border border-brand-200">
                 {attachedFiles.length} file(s) attached
               </span>
@@ -216,7 +221,7 @@ export const ChatWorkspacePage: React.FC = () => {
 
         {/* Message Stream */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {messages.length === 0 ? (
+          {(messages || []).length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center max-w-lg mx-auto space-y-4">
               <div className="h-16 w-16 rounded-2xl bg-brand-50 border border-brand-100 flex items-center justify-center text-brand-700 shadow-sm">
                 <Sparkles className="h-8 w-8" />
@@ -257,7 +262,7 @@ export const ChatWorkspacePage: React.FC = () => {
               </div>
             </div>
           ) : (
-            messages.map((m) => <MessageCard key={m.id} message={m} />)
+            (messages || []).map((m) => <MessageCard key={m.id} message={m} />)
           )}
 
           {sending && (
@@ -280,10 +285,10 @@ export const ChatWorkspacePage: React.FC = () => {
         </div>
 
         {/* Attached Files Strip */}
-        {attachedFiles.length > 0 && (
+        {(attachedFiles || []).length > 0 && (
           <div className="bg-white border-t border-slate-200 px-6 py-2 flex items-center space-x-2 overflow-x-auto">
             <span className="text-xs font-semibold text-slate-500 uppercase">Attached:</span>
-            {attachedFiles.map((doc) => (
+            {(attachedFiles || []).map((doc) => (
               <div
                 key={doc.id}
                 onClick={() => setActiveDocForInspector(doc)}
@@ -385,13 +390,13 @@ export const ChatWorkspacePage: React.FC = () => {
                     </h4>
 
                     {/* Fonts */}
-                    {activeDocForInspector.metadata_summary.fonts?.length > 0 && (
+                    {Array.isArray(activeDocForInspector.metadata_summary.fonts) && activeDocForInspector.metadata_summary.fonts.length > 0 && (
                       <div className="text-xs">
                         <span className="font-semibold text-slate-600">Preserved Fonts:</span>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {activeDocForInspector.metadata_summary.fonts.map((f: string) => (
                             <span key={f} className="px-2 py-0.5 bg-slate-100 rounded text-slate-700 font-mono">
-                              {f}
+                              {String(f)}
                             </span>
                           ))}
                         </div>
@@ -399,13 +404,13 @@ export const ChatWorkspacePage: React.FC = () => {
                     )}
 
                     {/* Colors */}
-                    {activeDocForInspector.metadata_summary.colors?.length > 0 && (
+                    {Array.isArray(activeDocForInspector.metadata_summary.colors) && activeDocForInspector.metadata_summary.colors.length > 0 && (
                       <div className="text-xs">
                         <span className="font-semibold text-slate-600">Brand Color Palette:</span>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {activeDocForInspector.metadata_summary.colors.map((c: string) => (
                             <span key={c} className="px-2 py-0.5 bg-slate-100 rounded text-slate-700 font-mono">
-                              {c}
+                              {String(c)}
                             </span>
                           ))}
                         </div>
@@ -413,19 +418,19 @@ export const ChatWorkspacePage: React.FC = () => {
                     )}
 
                     {/* Headings */}
-                    {activeDocForInspector.metadata_summary.headings?.length > 0 && (
+                    {Array.isArray(activeDocForInspector.metadata_summary.headings) && activeDocForInspector.metadata_summary.headings.length > 0 && (
                       <div className="text-xs">
                         <span className="font-semibold text-slate-600">Document Headings:</span>
                         <ul className="list-disc pl-4 space-y-1 mt-1 text-slate-600">
                           {activeDocForInspector.metadata_summary.headings.slice(0, 5).map((h: any, i: number) => (
-                            <li key={i} className="truncate">{h.text}</li>
+                            <li key={i} className="truncate">{h?.text || String(h)}</li>
                           ))}
                         </ul>
                       </div>
                     )}
 
                     {/* Tables or Sheets */}
-                    {activeDocForInspector.metadata_summary.tables?.length > 0 && (
+                    {Array.isArray(activeDocForInspector.metadata_summary.tables) && activeDocForInspector.metadata_summary.tables.length > 0 && (
                       <div className="text-xs">
                         <span className="font-semibold text-slate-600">Tables Identified:</span>
                         <p className="text-slate-500 mt-0.5">
@@ -434,13 +439,13 @@ export const ChatWorkspacePage: React.FC = () => {
                       </div>
                     )}
 
-                    {activeDocForInspector.metadata_summary.sheets?.length > 0 && (
+                    {Array.isArray(activeDocForInspector.metadata_summary.sheets) && activeDocForInspector.metadata_summary.sheets.length > 0 && (
                       <div className="text-xs">
                         <span className="font-semibold text-slate-600">Spreadsheet Sheets:</span>
                         <ul className="list-disc pl-4 space-y-1 mt-1 text-slate-600">
                           {activeDocForInspector.metadata_summary.sheets.map((s: any, i: number) => (
                             <li key={i}>
-                              {s.name} ({s.formulas_count} formulas preserved)
+                              {s?.name || 'Sheet'} ({s?.formulas_count ?? 0} formulas preserved)
                             </li>
                           ))}
                         </ul>
@@ -465,7 +470,11 @@ export const ChatWorkspacePage: React.FC = () => {
 // ----------------- Message Card Component -----------------
 const MessageCard: React.FC<{ message: Message }> = ({ message }) => {
   const [showLogs, setShowLogs] = useState(false);
+  if (!message) return null;
   const isUser = message.sender === 'user';
+  const citations = Array.isArray(message.citations) ? message.citations : [];
+  const generatedDocIds = Array.isArray(message.generated_doc_ids) ? message.generated_doc_ids : [];
+  const agentLogs = Array.isArray(message.agent_logs) ? message.agent_logs : [];
 
   return (
     <div className={`flex items-start space-x-3 ${isUser ? 'flex-row-reverse space-x-reverse' : ''}`}>
@@ -484,39 +493,43 @@ const MessageCard: React.FC<{ message: Message }> = ({ message }) => {
             : 'bg-white border border-slate-200 text-slate-900 rounded-tl-none'
         }`}
       >
-        <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+        <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content || ''}</p>
 
         {/* Citations Badges */}
-        {message.citations && message.citations.length > 0 && (
+        {citations.length > 0 && (
           <div className="pt-2 border-t border-slate-100 space-y-1.5">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
               Verified Web Sources & Citations:
             </span>
             <div className="flex flex-wrap gap-1.5">
-              {message.citations.map((c, i) => (
-                <a
-                  key={i}
-                  href={c.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center space-x-1 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 rounded text-xs text-brand-700 transition-colors max-w-xs truncate"
-                >
-                  <span className="truncate">{c.title || c.url}</span>
-                  <ExternalLink className="h-3 w-3 shrink-0" />
-                </a>
-              ))}
+              {citations.map((c: any, i: number) => {
+                const url = typeof c === 'string' ? c : c?.url || '#';
+                const title = typeof c === 'string' ? c : c?.title || url;
+                return (
+                  <a
+                    key={i}
+                    href={url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center space-x-1 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 rounded text-xs text-brand-700 transition-colors max-w-xs truncate"
+                  >
+                    <span className="truncate">{title}</span>
+                    <ExternalLink className="h-3 w-3 shrink-0" />
+                  </a>
+                );
+              })}
             </div>
           </div>
         )}
 
         {/* Downloadable Generated Artifacts */}
-        {message.generated_doc_ids && message.generated_doc_ids.length > 0 && (
+        {generatedDocIds.length > 0 && (
           <div className="pt-2 border-t border-slate-100 space-y-2">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
               Downloadable File:
             </span>
             <div className="flex flex-wrap gap-2">
-              {message.generated_doc_ids.map((docId) => (
+              {generatedDocIds.map((docId) => (
                 <a
                   key={docId}
                   href={api.getGeneratedDownloadUrl(docId)}
@@ -533,24 +546,24 @@ const MessageCard: React.FC<{ message: Message }> = ({ message }) => {
         )}
 
         {/* Multi-Agent Execution Drawer */}
-        {message.agent_logs && message.agent_logs.length > 0 && (
+        {agentLogs.length > 0 && (
           <div className="pt-2 border-t border-slate-100">
             <button
               onClick={() => setShowLogs(!showLogs)}
               className="text-xs text-slate-500 hover:text-slate-800 font-medium flex items-center space-x-1"
             >
               {showLogs ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-              <span>Agent Execution Steps ({message.agent_logs.length})</span>
+              <span>Agent Execution Steps ({agentLogs.length})</span>
             </button>
 
             {showLogs && (
               <div className="mt-2 space-y-1.5 pl-2 border-l-2 border-brand-200 text-xs">
-                {message.agent_logs.map((log, i) => (
+                {agentLogs.map((log: any, i: number) => (
                   <div key={i} className="py-1">
-                    <span className="font-bold text-brand-700">{log.agent}: </span>
-                    <span className="text-slate-700">{log.step} </span>
-                    <span className="text-slate-400 font-mono">({log.duration_ms}ms)</span>
-                    <p className="text-slate-500 mt-0.5">{log.output}</p>
+                    <span className="font-bold text-brand-700">{log?.agent || 'Agent'}: </span>
+                    <span className="text-slate-700">{log?.step || ''} </span>
+                    <span className="text-slate-400 font-mono">({log?.duration_ms || 0}ms)</span>
+                    <p className="text-slate-500 mt-0.5">{log?.output || ''}</p>
                   </div>
                 ))}
               </div>

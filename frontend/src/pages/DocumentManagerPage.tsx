@@ -33,10 +33,12 @@ export const DocumentManagerPage: React.FC = () => {
         api.listDocuments(),
         api.listGeneratedDocuments(),
       ]);
-      setUploadedDocs(uDocs);
-      setGeneratedDocs(gDocs);
+      setUploadedDocs(Array.isArray(uDocs) ? uDocs : []);
+      setGeneratedDocs(Array.isArray(gDocs) ? gDocs : []);
     } catch (err) {
       console.error('Error fetching documents:', err);
+      setUploadedDocs([]);
+      setGeneratedDocs([]);
     } finally {
       setLoading(false);
     }
@@ -90,7 +92,7 @@ export const DocumentManagerPage: React.FC = () => {
           }`}
         >
           <FileText className="h-4 w-4" />
-          <span>Uploaded Documents ({uploadedDocs.length})</span>
+          <span>Uploaded Documents ({(uploadedDocs || []).length})</span>
         </button>
         <button
           onClick={() => setTab('generated')}
@@ -101,14 +103,14 @@ export const DocumentManagerPage: React.FC = () => {
           }`}
         >
           <FileCheck2 className="h-4 w-4" />
-          <span>Generated & Edited Documents ({generatedDocs.length})</span>
+          <span>Generated & Edited Documents ({(generatedDocs || []).length})</span>
         </button>
       </div>
 
       {/* Document Tables */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         {tab === 'uploaded' ? (
-          uploadedDocs.length === 0 ? (
+          (uploadedDocs || []).length === 0 ? (
             <div className="p-8 text-center text-slate-400 text-sm">
               No documents uploaded yet. Upload DOCX, PPTX, XLSX, or PDF in the chat workspace.
             </div>
@@ -125,7 +127,7 @@ export const DocumentManagerPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {uploadedDocs.map((doc) => (
+                  {(uploadedDocs || []).map((doc) => (
                     <tr key={doc.id} className="hover:bg-slate-50 transition-colors">
                       <td className="px-6 py-4 font-medium text-slate-900 flex items-center space-x-2.5">
                         <FileText className="h-4 w-4 text-brand-600 shrink-0" />
@@ -167,7 +169,7 @@ export const DocumentManagerPage: React.FC = () => {
               </table>
             </div>
           )
-        ) : generatedDocs.length === 0 ? (
+        ) : (generatedDocs || []).length === 0 ? (
           <div className="p-8 text-center text-slate-400 text-sm">
             No generated or edited documents yet.
           </div>
@@ -183,7 +185,7 @@ export const DocumentManagerPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {generatedDocs.map((doc) => (
+                {(generatedDocs || []).map((doc) => (
                   <tr key={doc.id} className="hover:bg-slate-50 transition-colors">
                     <td className="px-6 py-4 font-medium text-slate-900 flex items-center space-x-2.5">
                       <FileCheck2 className="h-4 w-4 text-emerald-600 shrink-0" />

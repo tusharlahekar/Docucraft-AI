@@ -12,6 +12,7 @@ from backend.app.schemas.chat import (
 
 router = APIRouter(prefix="/conversations", tags=["Conversations"])
 
+@router.get("", response_model=List[ConversationResponse])
 @router.get("/", response_model=List[ConversationResponse])
 def list_conversations(
     current_user: User = Depends(get_current_user),
@@ -22,6 +23,7 @@ def list_conversations(
     ).order_by(Conversation.updated_at.desc()).all()
     return [ConversationResponse.model_validate(c) for c in convs]
 
+@router.post("", response_model=ConversationResponse)
 @router.post("/", response_model=ConversationResponse)
 def create_conversation(
     conv_in: ConversationCreate,

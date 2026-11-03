@@ -180,6 +180,7 @@ def edit_document(
 
     return GeneratedDocumentResponse.model_validate(gen_doc)
 
+@router.get("", response_model=List[GeneratedDocumentResponse])
 @router.get("/", response_model=List[GeneratedDocumentResponse])
 def list_generated_documents(
     current_user: User = Depends(get_current_user),

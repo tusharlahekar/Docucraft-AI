@@ -47,7 +47,7 @@ export const api = {
   // Conversations
   listConversations: async (): Promise<Conversation[]> => {
     const res = await apiClient.get('/conversations');
-    return res.data;
+    return Array.isArray(res.data) ? res.data : [];
   },
 
   createConversation: async (title?: string): Promise<Conversation> => {
@@ -94,7 +94,7 @@ export const api = {
 
   listDocuments: async (): Promise<UploadedDocument[]> => {
     const res = await apiClient.get('/documents');
-    return res.data;
+    return Array.isArray(res.data) ? res.data : [];
   },
 
   getDocument: async (id: string): Promise<UploadedDocument> => {
@@ -143,7 +143,7 @@ export const api = {
 
   listGeneratedDocuments: async (): Promise<GeneratedDocument[]> => {
     const res = await apiClient.get('/generation');
-    return res.data;
+    return Array.isArray(res.data) ? res.data : [];
   },
 
   getGeneratedDownloadUrl: (id: string): string => {
