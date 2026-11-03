@@ -3,8 +3,10 @@ from pathlib import Path
 from typing import List
 from pydantic_settings import BaseSettings
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
-ROOT_DIR = BASE_DIR.parent
+APP_DIR = Path(__file__).resolve().parent.parent.parent
+PROJECT_ROOT = APP_DIR.parent
+BASE_DIR = APP_DIR
+ROOT_DIR = PROJECT_ROOT
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Enterprise AI Chatbot & Document Generation Platform"
@@ -12,6 +14,8 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     HOST: str = "0.0.0.0"
     PORT: int = 8000
+    BASE_DIR: str = str(APP_DIR)
+    ROOT_DIR: str = str(PROJECT_ROOT)
     
     # CORS
     CORS_ORIGINS: List[str] = [
@@ -27,8 +31,8 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
     
     # Database
-    DATABASE_URL: str = os.getenv("DATABASE_URL", f"sqlite:///{BASE_DIR / 'platform.db'}")
-    SQLITE_FALLBACK_URL: str = f"sqlite:///{BASE_DIR / 'platform.db'}"
+    DATABASE_URL: str = os.getenv("DATABASE_URL", f"sqlite:///{APP_DIR / 'platform.db'}")
+    SQLITE_FALLBACK_URL: str = f"sqlite:///{APP_DIR / 'platform.db'}"
     
     # Local LLM (Ollama)
     ENABLE_OLLAMA: bool = os.getenv("ENABLE_OLLAMA", "false").lower() in ("true", "1", "yes")
@@ -37,13 +41,13 @@ class Settings(BaseSettings):
     OLLAMA_TIMEOUT_SECONDS: int = 60
     
     # ChromaDB
-    CHROMA_PERSIST_DIR: str = str(BASE_DIR / "chroma_data")
+    CHROMA_PERSIST_DIR: str = str(APP_DIR / "chroma_data")
     CHROMA_COLLECTION_NAME: str = "document_rag_collection"
     
     # Storage
-    STORAGE_DIR: str = str(BASE_DIR / "storage")
-    UPLOAD_DIR: str = str(BASE_DIR / "storage" / "uploads")
-    GENERATED_DIR: str = str(BASE_DIR / "storage" / "generated")
+    STORAGE_DIR: str = str(APP_DIR / "storage")
+    UPLOAD_DIR: str = str(APP_DIR / "storage" / "uploads")
+    GENERATED_DIR: str = str(APP_DIR / "storage" / "generated")
     MAX_UPLOAD_SIZE_MB: int = 50
     
     # Web Research

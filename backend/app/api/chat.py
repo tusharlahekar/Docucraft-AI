@@ -72,7 +72,7 @@ async def send_message(
 
     # 3. Execute LangGraph Multi-Agent Pipeline
     try:
-        final_state = await multi_agent_app.ainvoke(initial_state)
+        final_state = multi_agent_app.invoke(initial_state)
     except Exception as e:
         logger.error(f"Multi-agent graph execution failed: {e}", exc_info=True)
         final_state = initial_state

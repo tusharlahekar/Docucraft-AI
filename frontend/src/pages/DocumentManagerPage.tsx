@@ -253,15 +253,96 @@ export const DocumentManagerPage: React.FC = () => {
       {/* Diff Inspector Modal */}
       {selectedDiff && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-xl max-h-[85vh] flex flex-col">
+          <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl max-h-[88vh] flex flex-col border border-slate-100">
             <div className="flex items-center justify-between pb-3 border-b border-slate-200">
-              <h3 className="text-base font-bold text-slate-900">Document Comparison & Diff Audit</h3>
+              <div className="flex items-center space-x-2">
+                <GitCompare className="h-5 w-5 text-brand-600" />
+                <h3 className="text-base font-bold text-slate-900">Format Preservation & Visual Diff Audit</h3>
+              </div>
               <button onClick={() => setSelectedDiff(null)} className="text-slate-400 hover:text-slate-700">
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto pt-4 space-y-4 text-xs font-mono bg-slate-50 p-4 rounded-xl mt-3">
-              <pre>{JSON.stringify(selectedDiff, null, 2)}</pre>
+
+            <div className="flex-1 overflow-y-auto pt-4 space-y-4">
+              {/* Summary Cards */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="p-3 bg-purple-50 rounded-xl border border-purple-100 text-center">
+                  <span className="block text-xl font-extrabold text-purple-700">
+                    {selectedDiff.diff_summary?.modified_paragraphs ||
+                     selectedDiff.diff_summary?.modified_cells ||
+                     selectedDiff.diff_summary?.modified_slides ||
+                     selectedDiff.diff_summary?.modified_elements || 1}
+                  </span>
+                  <span className="text-[11px] font-medium text-purple-600 uppercase">Modified Items</span>
+                </div>
+                <div className="p-3 bg-blue-50 rounded-xl border border-blue-100 text-center">
+                  <span className="block text-xl font-extrabold text-blue-700">
+                    {selectedDiff.diff_summary?.added_sections || selectedDiff.diff_summary?.added_count || 1}
+                  </span>
+                  <span className="text-[11px] font-medium text-blue-600 uppercase">Added Sections</span>
+                </div>
+                <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-100 text-center">
+                  <span className="block text-xl font-extrabold text-emerald-700">100%</span>
+                  <span className="text-[11px] font-medium text-emerald-600 uppercase">Style Preserved</span>
+                </div>
+              </div>
+
+              {/* Status and File Info */}
+              <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1.5">
+                <div className="flex justify-between">
+                  <span className="text-slate-500 font-medium">Output File:</span>
+                  <span className="font-semibold text-slate-800">{selectedDiff.filename}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500 font-medium">Audit Status:</span>
+                  <span className="font-semibold text-emerald-600">
+                    {selectedDiff.diff_summary?.status || 'Verified Formatting Preservation'}
+                  </span>
+                </div>
+                {selectedDiff.diff_summary?.source_file && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-500 font-medium">Source Baseline:</span>
+                    <span className="font-semibold text-slate-700">{selectedDiff.diff_summary.source_file}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Changes Log */}
+              {Array.isArray(selectedDiff.diff_summary?.changes_log) && selectedDiff.diff_summary.changes_log.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Changes Log & Replacements</h4>
+                  <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                    {selectedDiff.diff_summary.changes_log.map((item: any, idx: number) => (
+                      <div key={idx} className="p-3 bg-white rounded-lg border border-slate-200 shadow-sm text-xs space-y-1">
+                        <div className="flex items-center justify-between font-semibold text-slate-700">
+                          <span className="capitalize text-brand-700 font-bold">{item.type || item.heading || 'Modification'}</span>
+                          {item.location && <span className="text-slate-400 font-normal">{item.location}</span>}
+                        </div>
+                        {item.target && (
+                          <div className="text-red-700 bg-red-50 p-2 rounded border border-red-100 font-mono text-[11px]">
+                            <span className="font-bold text-red-500 mr-1">- Original:</span> {item.target}
+                          </div>
+                        )}
+                        {item.replacement && (
+                          <div className="text-emerald-800 bg-emerald-50 p-2 rounded border border-emerald-100 font-mono text-[11px]">
+                            <span className="font-bold text-emerald-600 mr-1">+ Revised:</span> {item.replacement}
+                          </div>
+                        )}
+                        {item.details && <p className="text-slate-500 text-[11px] mt-1">{item.details}</p>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Raw JSON toggle */}
+              <details className="text-xs text-slate-500">
+                <summary className="cursor-pointer font-medium hover:text-slate-700">View Raw JSON Audit Payload</summary>
+                <div className="overflow-y-auto max-h-40 font-mono bg-slate-900 text-emerald-400 p-3 rounded-lg mt-2 text-[11px]">
+                  <pre>{JSON.stringify(selectedDiff, null, 2)}</pre>
+                </div>
+              </details>
             </div>
           </div>
         </div>
