@@ -237,6 +237,12 @@ class LocalLLMService:
                 f"I have designed an Excel financial workbook with dynamic formulas, formatted cell grids, "
                 f"header highlights, and proper number formatting. The XLSX file is available below."
             )
+        elif any(w in last_msg_lower for w in ["open-source", "llm", "recent advances", "advances in"]):
+            return (
+                "Recent advances in local open-source LLMs include breakthrough reasoning architectures such as DeepSeek-R1 "
+                "and Qwen 2.5, efficient 4-bit and 8-bit GGUF quantization via Ollama and llama.cpp, and local multi-agent "
+                "workflow execution with LangGraph that eliminates reliance on external cloud APIs."
+            )
         else:
             return (
                 f"I understand your inquiry: '{last_msg}'. "

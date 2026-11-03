@@ -1,4 +1,5 @@
 import logging
+import time
 from datetime import datetime, timezone
 from typing import List, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -10,6 +11,7 @@ from backend.app.models.entities import (
     Conversation,
     Message,
     GeneratedDocument,
+    DocumentVersion,
     AgentExecutionLog
 )
 from backend.app.schemas.chat import MessageCreate, MessageResponse
@@ -91,9 +93,19 @@ async def send_message(
             file_size=gen_doc.get("file_size", 0),
             storage_path=gen_doc.get("storage_path"),
             generation_type=gen_doc.get("generation_type", "created_from_scratch"),
-            diff_summary=final_state.get("editing_instructions", {})
+            diff_summary=gen_doc.get("diff_summary") or final_state.get("editing_instructions", {})
         )
         db.add(new_gen_doc)
+
+        if source_doc_id:
+            doc_ver = DocumentVersion(
+                document_id=source_doc_id,
+                version_number=int(time.time()),
+                storage_path=gen_doc.get("storage_path"),
+                change_description=message_in.content
+            )
+            db.add(doc_ver)
+
         db.commit()
         db.refresh(new_gen_doc)
         generated_doc_ids.append(new_gen_doc.id)

@@ -41,22 +41,47 @@ class LocalDeterministicEmbeddingFunction(EmbeddingFunction):
 
 class LocalVectorStore:
     def __init__(self):
-        os.makedirs(settings.CHROMA_PERSIST_DIR, exist_ok=True)
-        try:
-            self.client = chromadb.PersistentClient(
-                path=settings.CHROMA_PERSIST_DIR,
-                settings=ChromaSettings(anonymized_telemetry=False)
-            )
-            self.embedding_fn = LocalDeterministicEmbeddingFunction()
-            self.collection = self.client.get_or_create_collection(
-                name=settings.CHROMA_COLLECTION_NAME,
-                embedding_function=self.embedding_fn,
-                metadata={"description": "Document RAG Chunks Collection"}
-            )
-            logger.info(f"ChromaDB persistent collection ready with local embedding engine.")
-        except Exception as e:
-            logger.error(f"Failed to initialize ChromaDB PersistentClient: {e}")
-            raise e
+        self._client = None
+        self._collection = None
+        self.embedding_fn = LocalDeterministicEmbeddingFunction()
+
+    @property
+    def client(self):
+        if self._client is None:
+            os.makedirs(settings.CHROMA_PERSIST_DIR, exist_ok=True)
+            try:
+                self._client = chromadb.PersistentClient(
+                    path=settings.CHROMA_PERSIST_DIR,
+                    settings=ChromaSettings(anonymized_telemetry=False)
+                )
+            except Exception as e:
+                logger.warning(f"ChromaDB PersistentClient locked or failed ({e}). Falling back to EphemeralClient.")
+                self._client = chromadb.EphemeralClient(
+                    settings=ChromaSettings(anonymized_telemetry=False)
+                )
+        return self._client
+
+    @property
+    def collection(self):
+        if self._collection is None:
+            try:
+                self._collection = self.client.get_or_create_collection(
+                    name=settings.CHROMA_COLLECTION_NAME,
+                    embedding_function=self.embedding_fn,
+                    metadata={"description": "Document RAG Chunks Collection"}
+                )
+                logger.info("ChromaDB collection ready with local embedding engine.")
+            except Exception as e:
+                logger.warning(f"Error accessing collection: {e}. Reinitializing with EphemeralClient.")
+                self._client = chromadb.EphemeralClient(
+                    settings=ChromaSettings(anonymized_telemetry=False)
+                )
+                self._collection = self._client.get_or_create_collection(
+                    name=settings.CHROMA_COLLECTION_NAME,
+                    embedding_function=self.embedding_fn,
+                    metadata={"description": "Document RAG Chunks Collection"}
+                )
+        return self._collection
 
     def add_chunks(
         self,
