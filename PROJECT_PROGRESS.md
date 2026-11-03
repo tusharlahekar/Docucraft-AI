@@ -92,3 +92,19 @@ tests\test_xlsx_editing.py ..                                            [100%]
 1. Double-click `start_platform.bat` (or run `python -m uvicorn backend.app.main:app --port 8000` in one terminal and `cd frontend && npm run dev` in another).
 2. Open `http://localhost:5173` in your browser.
 3. Register an account and test chat, file uploads, document generation, and format-preserving editing.
+
+---
+
+## 5. Key Issues Resolved During Verification
+
+1. **Trailing Slash 307 Redirects & Auth Header Stripping**:
+   - *Problem*: FastAPI routes defined with `@router.get("/")` triggered an HTTP 307 redirect when requested without a trailing slash (`/conversations`, `/documents`, `/generation`). Standard browser CORS policy stripped the `Authorization` header during cross-origin redirect following, resulting in 401 Unauthorized responses.
+   - *Resolution*: Registered both `@router.get("")` and `@router.get("/")` (and corresponding `@router.post`) decorators across all routers, eliminating 307 redirects.
+
+2. **Defensive Array Guarding & White Screen Prevention**:
+   - *Problem*: Calling `.map()` or `.find()` on non-array state objects (`conversations`, `uploadedDocs`, `generatedDocs`, `messages`, `citations`, `agentLogs`) caused React to throw uncaught render exceptions, crashing into a white screen.
+   - *Resolution*: Wrapped all list calls in `Array.isArray()` fallbacks in `api.ts`, guarded all `.map()` calls in `ChatWorkspacePage.tsx` and `DocumentManagerPage.tsx`, and introduced an `ErrorBoundary` component in `App.tsx` that catches any rendering issues gracefully.
+
+3. **Windows Batch Script Path Truncation**:
+   - *Problem*: `%~dp0` in batch scripts contains a trailing backslash which caused `cmd.exe` path errors when quoted as `"%~dp0"`.
+   - *Resolution*: Normalized script root directories using `set "ROOT=%ROOT:~0,-1%"` across `start_platform.bat`, `run_backend.bat`, and `run_frontend.bat`.
