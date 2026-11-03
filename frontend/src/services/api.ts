@@ -107,7 +107,8 @@ export const api = {
   },
 
   getDocumentDownloadUrl: (id: string): string => {
-    return `${API_BASE_URL}/documents/${id}/download`;
+    const token = localStorage.getItem('token');
+    return `${API_BASE_URL}/documents/${id}/download${token ? `?token=${encodeURIComponent(token)}` : ''}`;
   },
 
   // Document Generation & Editing
@@ -147,7 +148,8 @@ export const api = {
   },
 
   getGeneratedDownloadUrl: (id: string): string => {
-    return `${API_BASE_URL}/generation/${id}/download`;
+    const token = localStorage.getItem('token');
+    return `${API_BASE_URL}/generation/${id}/download${token ? `?token=${encodeURIComponent(token)}` : ''}`;
   },
 
   getDiff: async (id: string): Promise<any> => {
