@@ -101,8 +101,20 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
           </div>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-              {error}
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 flex flex-col space-y-1">
+              <span>{error}</span>
+              {!isLogin && error.includes('already exists') && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsLogin(true);
+                    setError(null);
+                  }}
+                  className="text-xs font-bold text-brand-700 hover:underline text-left mt-1"
+                >
+                  👉 Click here to switch to Sign In with this email
+                </button>
+              )}
             </div>
           )}
 

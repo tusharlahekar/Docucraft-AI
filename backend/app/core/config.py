@@ -27,8 +27,8 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
     
     # Database
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5432/document_ai")
-    SQLITE_FALLBACK_URL: str = f"sqlite+aiosqlite:///{BASE_DIR / 'platform.db'}"
+    DATABASE_URL: str = os.getenv("DATABASE_URL", f"sqlite:///{BASE_DIR / 'platform.db'}")
+    SQLITE_FALLBACK_URL: str = f"sqlite:///{BASE_DIR / 'platform.db'}"
     
     # Local LLM (Ollama)
     ENABLE_OLLAMA: bool = os.getenv("ENABLE_OLLAMA", "false").lower() in ("true", "1", "yes")

@@ -62,14 +62,39 @@ app.include_router(gen_router, prefix=API_PREFIX)
 app.include_router(research_router, prefix=API_PREFIX)
 app.include_router(dashboard_router, prefix=API_PREFIX)
 
-@app.get("/")
-def root():
-    return {
-        "platform": settings.PROJECT_NAME,
-        "version": settings.VERSION,
-        "status": "operational",
-        "docs_url": "/docs"
-    }
+# Serve compiled Frontend static assets if available
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
+FRONTEND_DIST = os.path.join(settings.STORAGE_DIR, "..", "..", "frontend", "dist")
+FRONTEND_DIST = os.path.abspath(FRONTEND_DIST)
+
+if os.path.exists(FRONTEND_DIST):
+    assets_dir = os.path.join(FRONTEND_DIST, "assets")
+    if os.path.exists(assets_dir):
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+
+    @app.get("/{full_path:path}")
+    def serve_frontend(full_path: str):
+        # Allow API calls to pass through
+        if full_path.startswith("api/") or full_path.startswith("docs") or full_path.startswith("openapi.json"):
+            return None
+        candidate = os.path.join(FRONTEND_DIST, full_path)
+        if os.path.exists(candidate) and os.path.isfile(candidate):
+            return FileResponse(candidate)
+        index_file = os.path.join(FRONTEND_DIST, "index.html")
+        if os.path.exists(index_file):
+            return FileResponse(index_file)
+        return {"status": "operational", "docs_url": "/docs"}
+else:
+    @app.get("/")
+    def root():
+        return {
+            "platform": settings.PROJECT_NAME,
+            "version": settings.VERSION,
+            "status": "operational",
+            "docs_url": "/docs"
+        }
 
 if __name__ == "__main__":
     import uvicorn
