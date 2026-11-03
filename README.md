@@ -1,4 +1,4 @@
-# Enterprise AI Chatbot & Document Generation Platform
+# DocuCraft AI — Enterprise Multi-Agent Document Generation & Format-Preserving Editing Platform
 
 > **100% Free & Open Source | Zero Paid APIs | Zero Subscriptions | Complete Local Execution**
 
@@ -20,8 +20,9 @@ An enterprise-grade, multi-agent AI document assistant and generation platform b
    - **DOCX**: Targets specific paragraphs, runs, and table cells. Preserves font families, sizes, RGB colors, bold/italic styles, margins, headers, footers, and table borders.
    - **PPTX**: Edits slide shapes while strictly preserving slide masters, themes, 16:9 widescreen dimensions, coordinates, and shape formatting.
    - **XLSX**: Modifies cell values while strictly maintaining cell styles, fills, alignments, borders, number formats, and dynamic formulas (e.g. `=SUM(...)`).
+   - **PDF**: Targeted in-place content modifications via PyMuPDF (`fitz`) and ReportLab maintaining valid `%PDF-1.7` stream integrity, font hierarchy, and margin alignment.
    - Generates separate revised versions without ever overwriting the original file.
-   - Built-in **Diff Service** audits additions, modifications, and preserved elements.
+   - Built-in **Diff Service** audits additions, modifications, and preserved elements with visual side-by-side inspection.
 
 3. **Multi-Agent Cognitive Workflow (LangGraph)**
    9 specialized agents operating in an event-driven state graph:
@@ -32,14 +33,14 @@ An enterprise-grade, multi-agent AI document assistant and generation platform b
    - **Content Generation Agent**: Synthesizes structured briefings, reports, slides, and data grids.
    - **Document Editing Agent**: Plans targeted replacements and section additions.
    - **Validation Agent**: Audits format preservation, factual consistency, and formula integrity.
-   - **Document Generation Agent**: Compiles binary `.docx`, `.pptx`, and `.xlsx` files.
+   - **Document Generation Agent**: Compiles binary `.docx`, `.pptx`, `.xlsx`, and `.pdf` files.
    - **Response Agent**: Composes user responses with download links, citation badges, and reasoning steps.
 
 4. **Modern SaaS User Interface (React + TypeScript + Vite + Tailwind CSS)**
    - **Authentication**: User registration and login with bcrypt hashing and JWT tokens.
    - **Executive Dashboard**: Real-time metrics, system health monitors (LLM, ChromaDB, DB), quick document generation cards, and recent activity.
    - **AI Chat Workspace**: Multi-turn chat, file drag-and-drop, quick prompt pills, citations, agent execution logs drawer, and a collapsible **Document Structure Inspector**.
-   - **Document Repository**: Centralized manager for uploaded source files and generated/edited artifacts, with layout inspector and diff comparison modals.
+   - **Document Repository**: Centralized manager for uploaded source files and generated/edited artifacts, with layout inspector and interactive visual diff audit modals.
 
 ---
 
@@ -56,16 +57,16 @@ An enterprise-grade, multi-agent AI document assistant and generation platform b
 | **Word Processing** | `python-docx` + `lxml` | BSD (Free) | DOCX generation & run-level targeted editing |
 | **PowerPoint Processing** | `python-pptx` | MIT (Free) | PPTX generation & slide master preservation |
 | **Excel Processing** | `openpyxl` + `XlsxWriter` | MIT (Free) | XLSX generation & formula/style retention |
-| **PDF Processing** | `PyMuPDF` (`fitz`) | AGPL (Free) | PDF extraction & page structure analysis |
+| **PDF Processing** | `PyMuPDF` (`fitz`) + `ReportLab` | AGPL/BSD (Free) | Valid PDF compilation & targeted format editing |
 | **Web Search** | `duckduckgo-search` | MIT (Free) | Free web research with real URL citations |
-| **Testing** | `pytest` + `pytest-asyncio` | MIT (Free) | 100% automated test coverage |
+| **Testing** | `pytest` + `pytest-asyncio` | MIT (Free) | 100% automated test coverage (17/17 tests passing) |
 
 ---
 
 ## Folder Structure
 
 ```
-Nextastra Assignment/
+docucraft-ai/
 ├── backend/
 │   ├── app/
 │   │   ├── agents/          # LangGraph 9-Agent StateGraph & Nodes
@@ -73,7 +74,7 @@ Nextastra Assignment/
 │   │   ├── core/            # Config, DB engine, security, LLM client, vector store
 │   │   ├── models/          # SQLAlchemy schemas (10 primary entities)
 │   │   ├── schemas/         # Pydantic request/response models
-│   │   ├── services/        # Parsers, DOCX/PPTX/XLSX engines, diff service
+│   │   ├── services/        # Parsers, DOCX/PPTX/XLSX/PDF engines, diff service
 │   │   └── main.py          # Application entry point & lifespan
 │   ├── storage/
 │   │   ├── uploads/         # User uploaded source documents
@@ -95,11 +96,12 @@ Nextastra Assignment/
 ├── samples/
 │   ├── input/               # Pre-created test documents (DOCX, PPTX, XLSX, PDF)
 │   └── output/              # Sample generated and edited test files
-├── tests/                   # Pytest automated test suite (14/14 tests passing)
+├── tests/                   # Pytest automated test suite (17/17 tests passing)
 │   ├── test_agents.py
 │   ├── test_auth.py
 │   ├── test_document_parser.py
 │   ├── test_docx_editing.py
+│   ├── test_pdf_editing.py
 │   ├── test_pptx_editing.py
 │   └── test_xlsx_editing.py
 ├── scripts/
