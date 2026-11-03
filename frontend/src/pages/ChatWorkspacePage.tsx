@@ -17,7 +17,8 @@ import {
   Clock,
   Layers,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  X
 } from 'lucide-react';
 import { api } from '../services/api';
 import { Conversation, Message, UploadedDocument, AgentLog } from '../types';
@@ -59,6 +60,8 @@ export const ChatWorkspacePage: React.FC = () => {
 
   const selectConversation = async (id: string) => {
     setActiveConvId(id);
+    setAttachedFiles([]);
+    setActiveDocForInspector(null);
     try {
       const conv = await api.getConversation(id);
       setMessages(Array.isArray(conv?.messages) ? conv.messages : []);
@@ -286,18 +289,46 @@ export const ChatWorkspacePage: React.FC = () => {
 
         {/* Attached Files Strip */}
         {(attachedFiles || []).length > 0 && (
-          <div className="bg-white border-t border-slate-200 px-6 py-2 flex items-center space-x-2 overflow-x-auto">
-            <span className="text-xs font-semibold text-slate-500 uppercase">Attached:</span>
-            {(attachedFiles || []).map((doc) => (
-              <div
-                key={doc.id}
-                onClick={() => setActiveDocForInspector(doc)}
-                className="flex items-center space-x-1.5 px-2.5 py-1 bg-brand-50 border border-brand-200 rounded-md text-xs text-brand-800 font-medium cursor-pointer hover:bg-brand-100 transition-colors"
-              >
-                <FileText className="h-3.5 w-3.5 text-brand-600" />
-                <span className="max-w-[150px] truncate">{doc.filename}</span>
-              </div>
-            ))}
+          <div className="bg-white border-t border-slate-200 px-6 py-2 flex items-center justify-between overflow-x-auto">
+            <div className="flex items-center space-x-2">
+              <span className="text-xs font-semibold text-slate-500 uppercase">Attached:</span>
+              {(attachedFiles || []).map((doc) => (
+                <div
+                  key={doc.id}
+                  className="flex items-center space-x-1.5 px-2.5 py-1 bg-brand-50 border border-brand-200 rounded-md text-xs text-brand-800 font-medium group"
+                >
+                  <span
+                    onClick={() => setActiveDocForInspector(doc)}
+                    className="flex items-center space-x-1 cursor-pointer hover:underline"
+                  >
+                    <FileText className="h-3.5 w-3.5 text-brand-600" />
+                    <span className="max-w-[150px] truncate">{doc.filename}</span>
+                  </span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setAttachedFiles((prev) => prev.filter((d) => d.id !== doc.id));
+                      if (activeDocForInspector?.id === doc.id) {
+                        setActiveDocForInspector(null);
+                      }
+                    }}
+                    className="p-0.5 hover:bg-brand-200 rounded text-brand-700 ml-1 transition-colors"
+                    title="Remove attached file"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => {
+                setAttachedFiles([]);
+                setActiveDocForInspector(null);
+              }}
+              className="text-xs text-slate-400 hover:text-red-600 font-medium whitespace-nowrap ml-3 transition-colors"
+            >
+              Clear Attachments
+            </button>
           </div>
         )}
 

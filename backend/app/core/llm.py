@@ -156,27 +156,44 @@ class LocalLLMService:
             if "supervisor" in sys or "classify" in sys:
                 intent = "chat"
                 file_type = "none"
-                if any(w in last_msg_lower for w in ["edit", "update", "modify", "replace", "change"]):
+                is_gen = any(w in last_msg_lower for w in ["generate", "create", "make", "build", "write", "produce", "draft", "new "])
+                is_docx = any(w in last_msg_lower for w in ["docx", "word", "doc ", "doc report", "document"])
+                is_pptx = any(w in last_msg_lower for w in ["pptx", "powerpoint", "slides", "presentation", "deck"])
+                is_xlsx = any(w in last_msg_lower for w in ["xlsx", "excel", "spreadsheet", "sheet", "financial"])
+
+                if any(w in last_msg_lower for w in ["edit", "update", "modify", "replace", "change"]) and "attached" in last_msg_lower:
                     intent = "document_editing"
-                elif any(w in last_msg_lower for w in ["create doc", "generate doc", "make a word", "report.docx", "new report", "word report"]):
+                elif is_gen and is_docx:
                     intent = "document_generation"
                     file_type = "docx"
-                elif any(w in last_msg_lower for w in ["presentation", "powerpoint", "slides", "pptx"]):
+                elif is_gen and is_pptx:
                     intent = "document_generation"
                     file_type = "pptx"
-                elif any(w in last_msg_lower for w in ["excel", "spreadsheet", "sheet", "xlsx", "financial"]):
+                elif is_gen and is_xlsx:
                     intent = "document_generation"
                     file_type = "xlsx"
-                elif any(w in last_msg_lower for w in ["search", "who is", "latest", "what is", "current"]):
+                elif is_docx and any(w in last_msg_lower for w in ["file", "report", "document", "about", "tell", "advantages", "disadvantages"]):
+                    intent = "document_generation"
+                    file_type = "docx"
+                elif is_pptx and any(w in last_msg_lower for w in ["file", "presentation", "slides", "deck", "about"]):
+                    intent = "document_generation"
+                    file_type = "pptx"
+                elif is_xlsx and any(w in last_msg_lower for w in ["file", "sheet", "model", "table", "data"]):
+                    intent = "document_generation"
+                    file_type = "xlsx"
+                elif any(w in last_msg_lower for w in ["search", "who is", "latest", "what is", "current", "news"]):
                     intent = "research"
-                elif any(w in last_msg_lower for w in ["summarize", "find in doc", "document says", "analyze"]):
+                elif any(w in last_msg_lower for w in ["summarize", "find in doc", "document says", "analyze", "resume"]):
                     intent = "rag"
+
+                req_rag = (intent == "rag")
+                req_res = ("research" in intent) or any(w in last_msg_lower for w in ["latest", "recent", "search online"])
 
                 return json.dumps({
                     "intent": intent,
                     "target_file_type": file_type,
-                    "requires_research": "research" in intent or "latest" in last_msg_lower,
-                    "requires_rag": True,
+                    "requires_research": req_res,
+                    "requires_rag": req_rag,
                     "reasoning": f"Classified user request '{last_msg[:60]}...' as {intent}."
                 })
 
