@@ -80,10 +80,12 @@ async def send_message(
     generated_doc_ids = []
     gen_doc = final_state.get("generated_doc_info")
     if gen_doc:
+        attached_ids = final_state.get("attached_doc_ids") or []
+        source_doc_id = attached_ids[0] if len(attached_ids) > 0 else None
         new_gen_doc = GeneratedDocument(
             user_id=current_user.id,
             conversation_id=conversation_id,
-            source_document_id=final_state.get("attached_doc_ids", [None])[0],
+            source_document_id=source_doc_id,
             filename=gen_doc.get("filename"),
             file_type=gen_doc.get("file_type"),
             file_size=gen_doc.get("file_size", 0),
